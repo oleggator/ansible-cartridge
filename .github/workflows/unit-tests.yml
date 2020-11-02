@@ -1,0 +1,30 @@
+---
+name: Unit tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit-tests:
+    if: |
+      github.event_name == 'push' ||
+      github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login != 'tarantool'
+    runs-on: [ubuntu-latest]
+    env:
+      TARANTOOL_VERSION: '1.10'
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Install requirements
+        run: |
+          sudo apt -y update
+          curl -L https://tarantool.io/JRceXH/release/2.4/installer.sh | bash
+          sudo apt install -y python3-pip python3-setuptools
+          pip3 install -r unit/requirements.txt
+
+      - name: Run linter
+        run: python3 -m flake8 library unit
+
+      - name: Run unit tests
+        run: python3 -m unittest discover -v unit
